@@ -8,22 +8,27 @@ exports.getDashboardData = async (req, res) => {
     const userId = req.user.id;
     const userObjectId =  new Types.ObjectId(String(userId));
 
+    console.log("Dashboard request for userId:", userId);
+    console.log("UserObjectId:", userObjectId);
+
     // Fetch total expenses and incomes
     const totalIncome = await Income.aggregate([
       { $match: { userId: userObjectId } },
       { $group: { _id: null, total: { $sum: "$amount" } } }
     ]);
 
-    console.log("Total Income",{ totalIncome, userId: isValidObjectId(userId) });
+    console.log("Total Income aggregation result:", totalIncome);
 
     const totalExpense = await Expense.aggregate([
       { $match: { userId: userObjectId } },
       { $group: { _id: null, total: { $sum: "$amount" } } }
     ]);
 
+    console.log("Total Expense aggregation result:", totalExpense);
+
     // Get income transactions in the last 60 days
     const last60DaysIncomeTransactions = await Income.find({
-      userId,
+      userId: userObjectId,
       createdAt: { $gte: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000) }
     }).sort({date:-1});
 
@@ -35,7 +40,7 @@ exports.getDashboardData = async (req, res) => {
 
     // Get expense transactions in the last 60 days (changed from 30 to 60)
     const last60DaysExpenseTransactions = await Expense.find({
-      userId,
+      userId: userObjectId,
       createdAt: { $gte: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000) }
     }).sort({date:-1});
 
@@ -47,13 +52,13 @@ exports.getDashboardData = async (req, res) => {
 
     // fetch last 5 transactions
     const lastTransactions = [
-      ...(await Income.find({ userId }).sort({ date: -1 }).limit(5)).map(
+      ...(await Income.find({ userId: userObjectId }).sort({ date: -1 }).limit(5)).map(
         (txn) => ({
           ...txn.toObject(),
           type: "income"
         })
       ),
-      ...(await Expense.find({ userId }).sort({ date: -1 }).limit(5)).map(
+      ...(await Expense.find({ userId: userObjectId }).sort({ date: -1 }).limit(5)).map(
         (txn) => ({
           ...txn.toObject(),
           type: "expense"
@@ -61,6 +66,13 @@ exports.getDashboardData = async (req, res) => {
       ),
     ].sort((a, b) => b.date - a.date);
 
+    console.log("Data summary:", {
+      totalIncomeRecords: totalIncome.length,
+      totalExpenseRecords: totalExpense.length,
+      last60DaysIncomeCount: last60DaysIncomeTransactions.length,
+      last60DaysExpenseCount: last60DaysExpenseTransactions.length,
+      recentTransactionsCount: lastTransactions.length
+    });
 
     // final response
     res.json({
@@ -79,6 +91,7 @@ exports.getDashboardData = async (req, res) => {
       recentTransactions: lastTransactions,
     })
   } catch (error) {
+    console.error('Dashboard error:', error);
     res.status(500).json({ message: 'Error fetching dashboard data', error: error.message });
   }
 }

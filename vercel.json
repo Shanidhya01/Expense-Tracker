@@ -1,7 +1,8 @@
 {
-  "buildCommand": "cd frontend/expense-tracker && npm run build",
-  "outputDirectory": "frontend/expense-tracker/dist",
-  "installCommand": "cd frontend/expense-tracker && npm install",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "rootDirectory": "frontend",
   "rewrites": [
     {
       "source": "/(.*)",
