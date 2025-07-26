@@ -58,15 +58,23 @@ exports.downloadIncomeExcel = async (req, res) => {
     const data = incomes.map((item) => ({
       Source: item.source,
       Amount: item.amount,
-      Date: item.date,
+      Date: new Date(item.date).toLocaleDateString(),
+      Category: item.category || 'N/A',
+      Description: item.description || 'N/A'
     }));
 
-    // Generate Excel file
+    // Generate Excel file buffer
     const wb = xlsx.utils.book_new();
     const ws = xlsx.utils.json_to_sheet(data);
     xlsx.utils.book_append_sheet(wb, ws, 'Incomes');
-    xlsx.writeFile(wb, 'incomes_details.xlsx');
-    res.download('incomes_details.xlsx');
+    
+    // Convert to buffer instead of writing to file
+    const buffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    
+    // Set headers for file download
+    res.setHeader('Content-Disposition', 'attachment; filename=incomes_details.xlsx');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buffer);
   } catch (error) {
     res.status(500).json({ message: 'Error downloading income data', error: error.message });
   }

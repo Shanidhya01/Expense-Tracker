@@ -28,15 +28,20 @@ function Home() {
 
     setLoading(true);
     try {
+      console.log('Fetching dashboard data from:', `${API_PATHS.DASHBOARD.GET_DATA}`);
       const response = await axiosInstance.get(
         `${API_PATHS.DASHBOARD.GET_DATA}`
       );
 
+      console.log('Full API Response:', response);
       if(response.data) {
+        console.log('Dashboard API Response:', response.data);
+        console.log('Expense data in response:', response.data.last60DaysExpense);
         setDashboardData(response.data);
       }
     }catch(error){
       console.error("Error fetching dashboard data:", error);
+      console.error("Error details:", error.response?.data);
     }finally{
       setLoading(false);
     }
@@ -83,11 +88,11 @@ function Home() {
             totalExpense={DashboardData?.totalExpense || 0}
           />
           <ExpenseTransactions
-            transactions={DashboardData?.last30DaysExpense?.transactions || []}
+            transactions={DashboardData?.last60DaysExpense?.transactions || []}
             onSeeMore={() => navigate("/expense")}
           />
           <Last30DaysExpense
-            data={DashboardData?.last30DaysExpense?.transactions || []}
+            data={DashboardData?.last60DaysExpense?.transactions || []}
           />
 
           <RecentIncomeWithChart

@@ -56,17 +56,25 @@ exports.downloadExpenseExcel = async (req, res) => {
 
     // Prepare data for Excel
     const data = expenses.map((item) => ({
-      category: item.category,
+      Category: item.category,
       Amount: item.amount,
-      Date: item.date,
+      Date: new Date(item.date).toLocaleDateString(),
+      Description: item.description || 'N/A',
+      PaymentMethod: item.paymentMethod || 'N/A'
     }));
 
-    // Generate Excel file
+    // Generate Excel file buffer
     const wb = xlsx.utils.book_new();
     const ws = xlsx.utils.json_to_sheet(data);
     xlsx.utils.book_append_sheet(wb, ws, 'Expenses');
-    xlsx.writeFile(wb, 'Expenses_details.xlsx');
-    res.download('Expenses_details.xlsx');
+    
+    // Convert to buffer instead of writing to file
+    const buffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    
+    // Set headers for file download
+    res.setHeader('Content-Disposition', 'attachment; filename=expenses_details.xlsx');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buffer);
   } catch (error) {
     res.status(500).json({ message: 'Error downloading Expense data', error: error.message });
   }
