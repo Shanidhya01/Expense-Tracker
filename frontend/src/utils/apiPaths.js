@@ -1,4 +1,4 @@
-export const BASE_URL = 'https://expense-tracker-blond-sigma.vercel.app/';
+export const BASE_URL = 'https://expense-tracker-backend-nine-sigma.vercel.app/';
 
 // utils/apiPath.js
 export const API_PATHS = {
